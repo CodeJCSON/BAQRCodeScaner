@@ -15,6 +15,8 @@ CGFloat space_y = 64.0f;
 // 当前设备的屏幕高度
 #define KSCREEN_HEIGHT   [[UIScreen mainScreen] bounds].size.height
 #define scanerView_W_H 200
+#define TINTCOLOR_ALPHA 0.5f //浅色透明度
+#define DARKCOLOR_ALPHA 0.8f //深色透明度
 
 @interface BAQRCodeScaner ()<AVCaptureMetadataOutputObjectsDelegate>
 
@@ -31,7 +33,6 @@ CGFloat space_y = 64.0f;
 @property (nonatomic, strong) AVCaptureSession *session;
 //用于展示输出流到界面上的视图
 @property (nonatomic, strong) AVCaptureVideoPreviewLayer *videoLayer;
-
 
 @end
 
@@ -78,7 +79,6 @@ CGFloat space_y = 64.0f;
     self.backgroundView.layer.mask = maskLayer;
 }
 
-
 -(void)setScanWindow
 {
     /**
@@ -93,7 +93,7 @@ CGFloat space_y = 64.0f;
      *  扫描动画
      */
     _QRImageView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"BAQRCodeScaner.bundle/scan_move"]];
-    _QRImageView.frame = CGRectMake(0, -CGRectGetHeight(scanWindow.bounds), KSCREEN_WIDTH - 2.0 * self.space_x, CGRectGetHeight(scanWindow.bounds));
+    _QRImageView.frame = CGRectMake(0, -CGRectGetHeight(scanWindow.bounds), KSCREEN_WIDTH - 2.0 * self.space_x, KSCREEN_HEIGHT);
     [scanWindow addSubview:_QRImageView];
     
     _scanNetAnimation = [CABasicAnimation animation];
@@ -103,20 +103,35 @@ CGFloat space_y = 64.0f;
     _scanNetAnimation.repeatCount = MAXFLOAT;
     [_QRImageView.layer addAnimation:_scanNetAnimation forKey:nil];
     
-    /**
-     *  取消按钮
-     */
+    // 底部view
+    UIView *downView = [[UIView alloc] initWithFrame:CGRectMake(0, CGRectGetMaxY(scanWindow.frame) + 20, KSCREEN_WIDTH , KSCREEN_HEIGHT - CGRectGetMaxY(scanWindow.frame) - 20)];
+    downView.alpha = TINTCOLOR_ALPHA;
+    downView. backgroundColor = [[ UIColor grayColor ] colorWithAlphaComponent : TINTCOLOR_ALPHA ];
+    [self.view addSubview :downView];
+    
+    // 用于说明的label
+    UILabel *labIntroudction= [[ UILabel alloc ] init ];
+    labIntroudction. backgroundColor = [ UIColor clearColor ];
+    labIntroudction. frame = CGRectMake ( 0 , 20 , KSCREEN_WIDTH , 20 );
+    labIntroudction. numberOfLines = 1 ;
+    labIntroudction. font =[ UIFont systemFontOfSize : 15.0 ];
+    labIntroudction. textAlignment = NSTextAlignmentCenter ;
+    labIntroudction. textColor =[ UIColor whiteColor ];
+    labIntroudction. text = @"将二维码对准方框，即可自动扫描";
+    [downView addSubview :labIntroudction];
+
+    // 取消按钮
     UIButton *button = [UIButton buttonWithType:UIButtonTypeSystem];
     [button setTitle:@"取消" forState:UIControlStateNormal];
     [button setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
     [button addTarget:self action:@selector(cancel:) forControlEvents:UIControlEventTouchUpInside];
-    button.frame = CGRectMake(0, CGRectGetHeight(self.view.bounds) - 61.8, KSCREEN_WIDTH, 40);
-    [self.view addSubview:button];
+    button.frame = CGRectMake(0, CGRectGetHeight(downView.frame) - 40, KSCREEN_WIDTH, 30);
+    [downView addSubview:button];
     
     [self setOther];
 }
 
--(void)setOther
+- (void)setOther
 {
     /**
      *  四个角
@@ -234,7 +249,6 @@ CGFloat space_y = 64.0f;
         {
             self.returnQRString(obj.stringValue);
             [_videoLayer removeFromSuperlayer];
-            [_QRImageView.layer removeAllAnimations];
         }
     }
 }
